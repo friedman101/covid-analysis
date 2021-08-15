@@ -132,8 +132,8 @@ def plot_data(data):
         ax.annotate(data['abbreviation'].iloc[i], (x,y))
 
     ax.set_xlabel('Density [People per km^2]')
-    ax.set_ylabel('Covid Deaths per Thousand')
-    ax.set_title('Covid Deaths vs Density')
+    ax.set_ylabel('COVID-19 Deaths per Thousand')
+    ax.set_title('COVID-19 Deaths vs Density')
     ax.legend()
 
     fig, ax = plt.subplots(1,1)
@@ -150,7 +150,7 @@ def plot_data(data):
     ax.set_xticks(x_vals)
     ax.set_xticklabels(data['abbreviation'])
     ax.set_ylabel('Normalized Performance')
-    ax.set_title('Normalized State Covid Performance [higher is worse]')
+    ax.set_title('Normalized State COVID-19 Performance [higher is worse]')
     ax.legend()
 
     plt.tight_layout()
@@ -173,8 +173,8 @@ data = build_dataset(covid_df, state_area_df, state_population_df)
 plot_data(data)
 
 fig, ax = plt.subplots(2,1)
-plot_map(data, ax[0], 'state covid performance', 'State Covid Performance')
-plot_map(data, ax[1], 'adjusted state covid performance', 'Adjusted State Covid Performance')
+plot_map(data, ax[0], 'state covid performance', 'State COVID-19 Performance')
+plot_map(data, ax[1], 'adjusted state covid performance', 'Adjusted State COVID-19 Performance')
 plt.show()
 
 
