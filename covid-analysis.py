@@ -27,6 +27,12 @@ def get_file(url):
         urllib.request.urlretrieve(url, file)
     return file
 
+def normalize_dataset(data):
+    min_val = np.min(data)
+    max_val = np.max(data)
+    range_val = max_val - min_val
+    return (data-min_val)/range_val
+
 def get_data(url):
     return pd.read_csv(get_file(url))
 
@@ -112,6 +118,8 @@ def plot_data(data):
     
     p = np.polyfit(data['density [people per km^2]'], data['deaths per thousand'], 2)
     data['adjusted deaths per thousand'] = data['deaths per thousand'] - np.polyval(p, data['density [people per km^2]'])
+    data['state covid performance'] =  normalize_dataset(data['deaths per thousand'])
+    data['adjusted state covid performance'] = normalize_dataset(data['adjusted deaths per thousand'])
 
     fig, ax = plt.subplots(1,1)
 
@@ -128,22 +136,22 @@ def plot_data(data):
     ax.set_title('Covid Deaths vs Density')
     ax.legend()
 
-    fig, ax = plt.subplots(2,1)
+    fig, ax = plt.subplots(1,1)
 
-    data = data.sort_values(by='deaths per thousand')
+    data = data.sort_values(by='adjusted state covid performance')
     x_vals = list(range(data.shape[0]))
-    ax[0].bar(x_vals, data['deaths per thousand'])
-    ax[0].set_xticks(x_vals)
-    ax[0].set_xticklabels(data['abbreviation'])
-    ax[0].set_ylabel('Deaths per Thousand')
-    ax[0].set_title('Covid Deaths per Thousands')
-
-    data = data.sort_values(by='adjusted deaths per thousand')
-    ax[1].bar(x_vals, data['adjusted deaths per thousand'])
-    ax[1].set_xticks(x_vals)
-    ax[1].set_xticklabels(data['abbreviation'])
-    ax[1].set_ylabel('Covid Deaths per Thousand')
-    ax[1].set_title('Adjusted Deaths per Thousands')
+    for i in x_vals:
+        v0 = data['state covid performance'].iloc[i]
+        v1 = data['adjusted state covid performance'].iloc[i]
+        ax.vlines(i, v0, v1, color='black')
+        my_labels = ['nominal','adjusted'] if i == 0 else [None, None]
+        ax.scatter(i, v0, s=80, facecolors='none', edgecolors='r', label=my_labels[0])
+        ax.scatter(i, v1, s=80, facecolors='none', edgecolors='b', label=my_labels[1])
+    ax.set_xticks(x_vals)
+    ax.set_xticklabels(data['abbreviation'])
+    ax.set_ylabel('Normalized Performance')
+    ax.set_title('Normalized State Covid Performance [higher is worse]')
+    ax.legend()
 
     plt.tight_layout()
     
@@ -165,8 +173,8 @@ data = build_dataset(covid_df, state_area_df, state_population_df)
 plot_data(data)
 
 fig, ax = plt.subplots(2,1)
-plot_map(data, ax[0], 'deaths per thousand', 'Deaths per Thousand')
-plot_map(data, ax[1], 'adjusted deaths per thousand', 'Adjusted Deaths per Thousand')
+plot_map(data, ax[0], 'state covid performance', 'State Covid Performance')
+plot_map(data, ax[1], 'adjusted state covid performance', 'Adjusted State Covid Performance')
 plt.show()
 
 
