@@ -18,14 +18,17 @@ def get_state_name(state_abbr):
 def get_state_abbr(state_name):
     return us.states.lookup(state_name).abbr
 
-def get_data(url):
+def get_file(url):
     a = urlparse(url)
     data_dir = 'data'
     os.makedirs(data_dir, exist_ok=True)
     file = data_dir + '/' + os.path.basename(a.path)
     if not os.path.isfile(file):
         urllib.request.urlretrieve(url, file)
-    return pd.read_csv(file)
+    return file
+
+def get_data(url):
+    return pd.read_csv(get_file(url))
 
 def build_dataset(covid_df, state_area_df, state_population_df):
     states = set(covid_df['state'])
@@ -59,7 +62,6 @@ def build_dataset(covid_df, state_area_df, state_population_df):
             all_dict[state]['area [km^2]'] = state_area_dict[state]*sq_mi_to_sq_km
             all_dict[state]['abbreviation'] = get_state_abbr(state)
 
-
     data = pd.DataFrame.from_dict(all_dict, orient='index')
     data['density [people per km^2]'] = data['population']/data['area [km^2]']
     data['deaths per thousand'] = data['covid deaths']/data['population']*1000
@@ -75,12 +77,12 @@ def plot_map(data, ax, metric, title):
 
     m = Basemap(llcrnrlon=-119,llcrnrlat=22,urcrnrlon=-64,urcrnrlat=49,
         projection='lcc',lat_1=33,lat_2=45,lon_0=-95)
-    m.readshapefile('st99_d00', name='states', drawbounds=True)
+    m.readshapefile('data/st99_d00', name='states', drawbounds=True)
 
     state_names = []
     colors = {}
     colors_adjusted = {}
-    cmap = plt.cm.viridis
+    cmap = plt.cm.YlOrRd
     for shape_dict in m.states_info:
         state_name = shape_dict['NAME']
         state_names += [state_name]
@@ -91,7 +93,7 @@ def plot_map(data, ax, metric, title):
         max_val = np.max(data[metric])
         range_val = max_val-min_val
         metric_val = (data.at[state_name,metric]-min_val)/range_val
-        colors[state_name] = cmap(1-metric_val)[:3]
+        colors[state_name] = cmap(metric_val)[:3]
 
     ax = plt.gca() # get current axes instance
     for nshape,seg in enumerate(m.states):
@@ -108,14 +110,14 @@ def plot_map(data, ax, metric, title):
 
 def plot_data(data):
     
-    p = np.polyfit(data['density [people per km^2]'], data['deaths per thousand'], 4)
+    p = np.polyfit(data['density [people per km^2]'], data['deaths per thousand'], 2)
     data['adjusted deaths per thousand'] = data['deaths per thousand'] - np.polyval(p, data['density [people per km^2]'])
 
     fig, ax = plt.subplots(1,1)
 
     ax.scatter(data['density [people per km^2]'], data['deaths per thousand'], label='data')
     x_vals = np.linspace(0, np.max(data['density [people per km^2]']), 1000)
-    ax.scatter(x_vals, np.polyval(p, x_vals), label='fit', color='black', marker='.')
+    ax.plot(x_vals, np.polyval(p, x_vals), label='fit', color='black')
     for i in range(data.shape[0]):
         x = data['density [people per km^2]'].iloc[i]
         y = data['deaths per thousand'].iloc[i]
@@ -149,10 +151,15 @@ def plot_data(data):
 covid_csv_url = 'https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-states.csv'
 state_area_url = 'https://raw.githubusercontent.com/jakevdp/data-USstates/master/state-areas.csv'
 state_population_url = 'https://raw.githubusercontent.com/jakevdp/data-USstates/master/state-population.csv'
+us_state_shapefile_urls = ['https://github.com/matplotlib/basemap/raw/master/examples/st99_d00.shp',
+                        'https://github.com/matplotlib/basemap/raw/master/examples/st99_d00.shx',
+                        'https://github.com/matplotlib/basemap/raw/master/examples/st99_d00.dbf']
 
 covid_df = get_data(covid_csv_url)
 state_area_df = get_data(state_area_url)
 state_population_df = get_data(state_population_url)
+for url in us_state_shapefile_urls:
+    get_file(url)
 
 data = build_dataset(covid_df, state_area_df, state_population_df)
 plot_data(data)
