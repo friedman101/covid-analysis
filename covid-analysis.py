@@ -123,7 +123,6 @@ def plot_data(data):
 
     fig, ax = plt.subplots(1,1)
 
-    ax.scatter(data['density [people per km^2]'], data['deaths per thousand'], label='data', s=80, facecolors='none', edgecolors='b')
     x_vals = np.linspace(0, np.max(data['density [people per km^2]']), 1000)
     ax.plot(x_vals, np.polyval(p, x_vals), label='fit', color='black')
     for i in range(data.shape[0]):
@@ -134,7 +133,6 @@ def plot_data(data):
     ax.set_xlabel('Density [People per km^2]')
     ax.set_ylabel('COVID-19 Deaths per Thousand')
     ax.set_title('COVID-19 Deaths vs Density')
-    ax.legend()
 
     fig, ax = plt.subplots(1,1)
 
