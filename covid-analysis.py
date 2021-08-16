@@ -8,9 +8,6 @@ from urllib.parse import urlparse
 import pandas as pd
 import us
 import matplotlib.pyplot as plt
-from mpl_toolkits.basemap import Basemap
-from matplotlib.colors import rgb2hex
-from matplotlib.patches import Polygon
 
 def get_state_name(state_abbr):
     return us.states.lookup(state_abbr).name
@@ -77,43 +74,6 @@ def build_dataset(covid_df, state_area_df, state_population_df):
 
     return data
 
-def plot_map(data, ax, metric, title):
-
-    plt.sca(ax)
-
-    m = Basemap(llcrnrlon=-119,llcrnrlat=22,urcrnrlon=-64,urcrnrlat=49,
-        projection='lcc',lat_1=33,lat_2=45,lon_0=-95)
-    m.readshapefile('data/st99_d00', name='states', drawbounds=True)
-
-    state_names = []
-    colors = {}
-    colors_adjusted = {}
-    cmap = plt.cm.YlOrRd
-    for shape_dict in m.states_info:
-        state_name = shape_dict['NAME']
-        state_names += [state_name]
-        if state_name in ['District of Columbia','Puerto Rico']:
-            continue
-        
-        min_val = np.min(data[metric])
-        max_val = np.max(data[metric])
-        range_val = max_val-min_val
-        metric_val = (data.at[state_name,metric]-min_val)/range_val
-        colors[state_name] = cmap(metric_val)[:3]
-
-    ax = plt.gca() # get current axes instance
-    for nshape,seg in enumerate(m.states):
-        if state_names[nshape] in ['District of Columbia','Puerto Rico']:
-            continue
-
-        color = rgb2hex(colors[state_names[nshape]]) 
-        poly = Polygon(seg,facecolor=color,edgecolor=color)
-        ax.add_patch(poly)
-
-    ax.set_title(title)
-        
-
-
 def plot_data(data):
     
     p = np.polyfit(data['density [people per km^2]'], data['deaths per thousand'], 2)
@@ -169,10 +129,6 @@ for url in us_state_shapefile_urls:
 
 data = build_dataset(covid_df, state_area_df, state_population_df)
 plot_data(data)
-
-fig, ax = plt.subplots(2,1)
-plot_map(data, ax[0], 'state covid performance', 'State COVID-19 Performance')
-plot_map(data, ax[1], 'adjusted state covid performance', 'Adjusted State COVID-19 Performance')
 plt.show()
 
 
