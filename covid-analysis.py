@@ -117,15 +117,10 @@ def plot_data(data):
 covid_csv_url = 'https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-states.csv'
 state_area_url = 'https://raw.githubusercontent.com/jakevdp/data-USstates/master/state-areas.csv'
 state_population_url = 'https://raw.githubusercontent.com/jakevdp/data-USstates/master/state-population.csv'
-us_state_shapefile_urls = ['https://github.com/matplotlib/basemap/raw/master/examples/st99_d00.shp',
-                        'https://github.com/matplotlib/basemap/raw/master/examples/st99_d00.shx',
-                        'https://github.com/matplotlib/basemap/raw/master/examples/st99_d00.dbf']
 
 covid_df = get_data(covid_csv_url)
 state_area_df = get_data(state_area_url)
 state_population_df = get_data(state_population_url)
-for url in us_state_shapefile_urls:
-    get_file(url)
 
 data = build_dataset(covid_df, state_area_df, state_population_df)
 plot_data(data)
